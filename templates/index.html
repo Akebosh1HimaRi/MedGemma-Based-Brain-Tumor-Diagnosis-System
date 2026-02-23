@@ -1,0 +1,1046 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-i18n="pageTitle">Brain Tumor Detection System - MedGuide</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            font-size: 36px;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+        }
+
+        .card h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 24px;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        .upload-area {
+            border: 3px dashed #667eea;
+            border-radius: 8px;
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background-color: #f8f9ff;
+        }
+
+        .upload-area:hover {
+            border-color: #764ba2;
+            background-color: #f0f2ff;
+        }
+
+        .upload-area.dragover {
+            border-color: #764ba2;
+            background-color: #e8ebff;
+            transform: scale(1.02);
+        }
+
+        .upload-area i {
+            font-size: 48px;
+            color: #667eea;
+            margin-bottom: 15px;
+            display: block;
+        }
+
+        .upload-area p {
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .upload-area .hint {
+            font-size: 12px;
+            color: #999;
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        .button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            margin-top: 15px;
+        }
+
+        .button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .button.secondary {
+            background: #f0f0f0;
+            color: #333;
+            border: 2px solid #ddd;
+        }
+
+        .button.secondary:hover {
+            background: #e0e0e0;
+        }
+
+        .image-preview {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .image-preview img {
+            max-width: 100%;
+            max-height: 300px;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .results {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            display: none;
+        }
+
+        .results.show {
+            display: block;
+        }
+
+        .result-item {
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+
+        .result-label {
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .result-value {
+            color: #666;
+            font-size: 16px;
+        }
+
+        .probability-chart {
+            margin-top: 20px;
+        }
+
+        .probability-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .probability-label {
+            width: 120px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .probability-bar {
+            flex: 1;
+            height: 30px;
+            background-color: #e0e0e0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 0 15px;
+        }
+
+        .probability-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 10px;
+            color: white;
+            font-weight: bold;
+            font-size: 12px;
+            transition: width 0.5s ease;
+        }
+
+        .probability-value {
+            width: 60px;
+            text-align: right;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .diagnosis-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .diagnosis-box.warning {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .diagnosis-box.success {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+
+        .diagnosis-title {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .diagnosis-subtitle {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .loading.show {
+            display: block;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .status-message {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            display: none;
+        }
+
+        .status-message.show {
+            display: block;
+        }
+
+        .status-message.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status-message.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .status-message.info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .button-group .button {
+            flex: 1;
+            min-width: 150px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+
+        .modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background-color: white;
+            padding: 30px;
+            border-radius: 12px;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        }
+
+        .modal-header {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .modal-close {
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            color: #999;
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+
+        .modal-close:hover {
+            color: #333;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-family: inherit;
+            font-size: 14px;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+
+            .header h1 {
+                font-size: 28px;
+            }
+
+            .button-group .button {
+                min-width: 100%;
+            }
+        }
+
+        .footer {
+            text-align: center;
+            color: white;
+            margin-top: 40px;
+            opacity: 0.8;
+        }
+
+        .info-box {
+            background-color: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            color: #1565c0;
+        }
+
+        .language-toggle {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            z-index: 100;
+        }
+
+        .language-buttons {
+            display: flex;
+            gap: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 8px;
+            border-radius: 6px;
+            backdrop-filter: blur(10px);
+        }
+
+        .lang-btn {
+            background: transparent;
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .lang-btn:hover {
+            border-color: rgba(255, 255, 255, 0.6);
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .lang-btn.active {
+            background: white;
+            color: #667eea;
+            border-color: white;
+        }
+
+        .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-family: inherit;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="language-toggle">
+        <div class="language-buttons">
+            <button class="lang-btn active" id="langEnBtn" data-lang="en">English</button>
+            <button class="lang-btn" id="langZhBtn" data-lang="zh">中文</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="header">
+            <h1 data-i18n="appTitle">🧠 Brain Tumor Detection System</h1>
+            <p data-i18n="appSubtitle">Medical Imaging Diagnosis Assistant based on MedGemma AI</p>
+        </div>
+
+        <div class="main-content">
+            <!-- 上传区域 -->
+            <div class="card">
+                <h2 data-i18n="uploadTitle">📤 Upload Image</h2>
+
+                <div class="info-box">
+                    <strong data-i18n="supportedFormats">Supported Formats:</strong> PNG, JPG, JPEG, GIF, BMP, TIFF<br>
+                    <strong data-i18n="maxFileSize">Max File Size:</strong> 50MB
+                </div>
+
+                <div class="upload-area" id="uploadArea">
+                    <i>📁</i>
+                    <p><strong data-i18n="uploadPrompt">Click or drag brain MRI image here</strong></p>
+                    <p class="hint" data-i18n="uploadHint">Supports PNG, JPG and other common image formats</p>
+                </div>
+
+                <input type="file" id="fileInput" accept="image/*">
+
+                <div class="image-preview" id="imagePreview" style="display: none;">
+                    <img id="previewImage" src="" alt="preview">
+                </div>
+
+                <button class="button" id="analyzeBtn" disabled data-i18n="analyzeBtn">🔍 Analyze</button>
+                <button class="button secondary" id="clearBtn" style="display: none;" data-i18n="clearBtn">🔄 Clear</button>
+            </div>
+
+            <!-- 结果区域 -->
+            <div class="card">
+                <h2 data-i18n="resultsTitle">📊 Analysis Results</h2>
+
+                <div class="status-message" id="statusMessage"></div>
+
+                <div class="loading" id="loading">
+                    <div class="spinner"></div>
+                    <p data-i18n="analyzingMessage">Analyzing image, please wait...</p>
+                </div>
+
+                <div id="resultsContainer" style="display: none;">
+                    <div class="diagnosis-box" id="diagnosisBox">
+                        <div class="diagnosis-title" id="diagnosisTitle">Analyzing...</div>
+                        <div class="diagnosis-subtitle" id="diagnosisSubtitle">Confidence: --</div>
+                    </div>
+
+                    <div class="result-item">
+                        <div class="result-label" data-i18n="primaryDiagnosis">Primary Diagnosis</div>
+                        <div class="result-value" id="mainDiagnosis">--</div>
+                    </div>
+
+                    <div class="result-item">
+                        <div class="result-label" data-i18n="confidenceLabel">Diagnostic Confidence</div>
+                        <div class="result-value" id="confidence">--</div>
+                    </div>
+
+                    <div class="result-item">
+                        <div class="result-label" data-i18n="tumorProbabilityLabel">Tumor Probability</div>
+                        <div class="result-value" id="tumorProbability">--</div>
+                    </div>
+
+                    <div class="probability-chart" id="probabilityChart">
+                        <h3 style="margin-bottom: 15px;" data-i18n="probabilityDistribution">Probability Distribution</h3>
+                        <div id="probabilityItems"></div>
+                    </div>
+
+                    <div class="button-group">
+                        <button class="button" id="generateReportBtn" data-i18n="generateReportBtn">📄 Generate Report</button>
+                        <button class="button secondary" id="downloadReportBtn" style="display: none;" data-i18n="downloadReportBtn">⬇️ Download Report</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 报告模态框 -->
+        <div class="modal" id="reportModal">
+            <div class="modal-content">
+                <span class="modal-close" id="closeModal">&times;</span>
+                <div class="modal-header" data-i18n="reportModalTitle">📋 Medical Diagnostic Report</div>
+
+                <div class="form-group">
+                    <label data-i18n="patientIdLabel">Patient ID</label>
+                    <input type="text" id="patientId" placeholder="Enter patient ID (optional)">
+                </div>
+
+                <div class="form-group">
+                    <label data-i18n="examDateLabel">Examination Date</label>
+                    <input type="date" id="examDate">
+                </div>
+
+                <div class="form-group">
+                    <label data-i18n="tumorLocationLabel">Tumor Location (optional)</label>
+                    <input type="text" id="tumorLocation" placeholder="e.g., Right frontal lobe">
+                </div>
+
+                <div class="form-group">
+                    <label data-i18n="remarksLabel">Other Notes (optional)</label>
+                    <textarea id="remarks" placeholder="Enter other clinical information..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label data-i18n="reportLanguageLabel">Report Language</label>
+                    <select id="reportLanguage">
+                        <option value="en" data-i18n="englishOption">English</option>
+                        <option value="zh" data-i18n="chineseOption">中文</option>
+                    </select>
+                </div>
+
+                <div class="button-group">
+                    <button class="button" id="confirmReportBtn" data-i18n="confirmReportBtn">✓ Generate Report</button>
+                    <button class="button secondary" id="cancelReportBtn" data-i18n="cancelReportBtn">✕ Cancel</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p data-i18n="footerText">© 2026 MedGuide - Brain Tumor Detection System | Based on MedGemma 1.5 4B Model</p>
+            <p data-i18n="disclaimer">⚠️ This system is for medical professionals only. Final diagnosis must be confirmed by qualified physicians.</p>
+        </div>
+    </div>
+
+    <script>
+        // ==================== Internationalization (i18n) ====================
+        const translations = {
+            en: {
+                pageTitle: 'Brain Tumor Detection System - MedGuide',
+                appTitle: '🧠 Brain Tumor Detection System',
+                appSubtitle: 'Medical Imaging Diagnosis Assistant based on MedGemma AI',
+                uploadTitle: '📤 Upload Image',
+                supportedFormats: 'Supported Formats:',
+                maxFileSize: 'Max File Size:',
+                uploadPrompt: 'Click or drag brain MRI image here',
+                uploadHint: 'Supports PNG, JPG and other common image formats',
+                analyzeBtn: '🔍 Analyze',
+                clearBtn: '🔄 Clear',
+                resultsTitle: '📊 Analysis Results',
+                analyzingMessage: 'Analyzing image, please wait...',
+                primaryDiagnosis: 'Primary Diagnosis',
+                confidenceLabel: 'Diagnostic Confidence',
+                tumorProbabilityLabel: 'Tumor Probability',
+                probabilityDistribution: 'Probability Distribution',
+                generateReportBtn: '📄 Generate Report',
+                downloadReportBtn: '⬇️ Download Report',
+                reportModalTitle: '📋 Medical Diagnostic Report',
+                patientIdLabel: 'Patient ID',
+                examDateLabel: 'Examination Date',
+                tumorLocationLabel: 'Tumor Location (optional)',
+                remarksLabel: 'Other Notes (optional)',
+                reportLanguageLabel: 'Report Language',
+                englishOption: 'English',
+                chineseOption: '中文',
+                confirmReportBtn: '✓ Generate Report',
+                cancelReportBtn: '✕ Cancel',
+                footerText: '© 2026 MedGuide - Brain Tumor Detection System | Based on MedGemma 1.5 4B Model',
+                disclaimer: '⚠️ This system is for medical professionals only. Final diagnosis must be confirmed by qualified physicians.',
+                fileTypeError: 'Please upload an image file',
+                fileSizeError: 'File size cannot exceed 50MB',
+                uploadFirstError: 'Please upload an image first',
+                analyzingStatus: 'Analyzing image...',
+                analysisComplete: 'Analysis complete!',
+                analysisFailed: 'Analysis failed:',
+                analyzeFirstError: 'Please analyze the image first',
+                generatingReportStatus: 'Generating report...',
+                reportGeneratedSuccess: 'Report generated successfully!',
+                reportGeneratedFailed: 'Failed to generate report:',
+                downloadFirstError: 'Please generate a report first',
+                confidence: 'Confidence:',
+                reportPreviewAlert: 'Report generated!\n\n'
+            },
+            zh: {
+                pageTitle: '脑部肿瘤检测系统 - MedGuide',
+                appTitle: '🧠 脑部肿瘤检测系统',
+                appSubtitle: '基于MedGemma AI的医学影像诊断辅助系统',
+                uploadTitle: '📤 上传影像',
+                supportedFormats: '支持格式:',
+                maxFileSize: '最大文件:',
+                uploadPrompt: '点击或拖拽上传脑部MRI影像',
+                uploadHint: '支持PNG、JPG等常见图像格式',
+                analyzeBtn: '🔍 开始分析',
+                clearBtn: '🔄 清除',
+                resultsTitle: '📊 分析结果',
+                analyzingMessage: '正在分析影像，请稍候...',
+                primaryDiagnosis: '主要诊断',
+                confidenceLabel: '诊断置信度',
+                tumorProbabilityLabel: '肿瘤概率',
+                probabilityDistribution: '诊断概率分布',
+                generateReportBtn: '📄 生成报告',
+                downloadReportBtn: '⬇️ 下载报告',
+                reportModalTitle: '📋 医学诊断报告',
+                patientIdLabel: '患者ID',
+                examDateLabel: '检查日期',
+                tumorLocationLabel: '肿瘤位置（可选）',
+                remarksLabel: '其他备注（可选）',
+                reportLanguageLabel: '报告语言',
+                englishOption: 'English',
+                chineseOption: '中文',
+                confirmReportBtn: '✓ 生成报告',
+                cancelReportBtn: '✕ 取消',
+                footerText: '© 2026 MedGuide - 脑部肿瘤检测系统 | 基于MedGemma 1.5 4B模型',
+                disclaimer: '⚠️ 本系统仅供医学专业人士参考，最终诊断应由有资质的医生确认',
+                fileTypeError: '请上传图像文件',
+                fileSizeError: '文件大小不能超过50MB',
+                uploadFirstError: '请先上传图像',
+                analyzingStatus: '正在分析影像...',
+                analysisComplete: '分析完成！',
+                analysisFailed: '分析失败:',
+                analyzeFirstError: '请先分析影像',
+                generatingReportStatus: '正在生成报告...',
+                reportGeneratedSuccess: '报告生成成功！',
+                reportGeneratedFailed: '生成报告失败:',
+                downloadFirstError: '请先生成报告',
+                confidence: '置信度:',
+                reportPreviewAlert: '报告已生成！\n\n'
+            }
+        };
+
+        // ==================== Global Variables ====================
+        let currentLanguage = 'en'; // Default language
+        let currentPrediction = null;
+        let currentImagePath = null;
+        let currentReportId = null;
+
+        // ==================== Initialization ====================
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeLanguage();
+            initializeEventListeners();
+            setExamDate();
+        });
+
+        // ==================== Language Management ====================
+        function initializeLanguage() {
+            // Get saved language from localStorage or default to 'en'
+            const savedLanguage = localStorage.getItem('medguide-language');
+            if (savedLanguage) {
+                currentLanguage = savedLanguage;
+            } else {
+                currentLanguage = 'en';
+                localStorage.setItem('medguide-language', 'en');
+            }
+
+            updateLanguage(currentLanguage);
+            updateLanguageButtonState();
+
+            // Language toggle buttons
+            document.getElementById('langEnBtn').addEventListener('click', () => setLanguage('en'));
+            document.getElementById('langZhBtn').addEventListener('click', () => setLanguage('zh'));
+        }
+
+        function setLanguage(lang) {
+            if (lang !== 'en' && lang !== 'zh') return;
+            currentLanguage = lang;
+            localStorage.setItem('medguide-language', lang);
+            updateLanguage(lang);
+            updateLanguageButtonState();
+        }
+
+        function updateLanguage(lang) {
+            document.documentElement.lang = lang === 'zh' ? 'zh-CN' : 'en';
+
+            // Update all elements with data-i18n attribute
+            document.querySelectorAll('[data-i18n]').forEach(element => {
+                const key = element.getAttribute('data-i18n');
+                if (translations[lang][key]) {
+                    if (element.tagName === 'INPUT' || element.tagName === 'TEXTAREA') {
+                        element.placeholder = translations[lang][key];
+                    } else {
+                        element.textContent = translations[lang][key];
+                    }
+                }
+            });
+
+            // Update title
+            document.title = translations[lang].pageTitle;
+
+            // Update report language dropdown default value
+            document.getElementById('reportLanguage').value = lang;
+        }
+
+        function updateLanguageButtonState() {
+            document.querySelectorAll('.lang-btn').forEach(btn => {
+                const btnLang = btn.getAttribute('data-lang');
+                if (btnLang === currentLanguage) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+        }
+
+        function t(key) {
+            return translations[currentLanguage][key] || translations['en'][key] || key;
+        }
+
+        // ==================== Event Listeners ====================
+        function initializeEventListeners() {
+            // Upload area
+            const uploadArea = document.getElementById('uploadArea');
+            const fileInput = document.getElementById('fileInput');
+
+            uploadArea.addEventListener('click', () => fileInput.click());
+            uploadArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                uploadArea.classList.add('dragover');
+            });
+            uploadArea.addEventListener('dragleave', () => {
+                uploadArea.classList.remove('dragover');
+            });
+            uploadArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                uploadArea.classList.remove('dragover');
+                handleFiles(e.dataTransfer.files);
+            });
+
+            fileInput.addEventListener('change', (e) => {
+                handleFiles(e.target.files);
+            });
+
+            // Buttons
+            document.getElementById('analyzeBtn').addEventListener('click', analyzeImage);
+            document.getElementById('clearBtn').addEventListener('click', clearUpload);
+            document.getElementById('generateReportBtn').addEventListener('click', showReportModal);
+            document.getElementById('confirmReportBtn').addEventListener('click', generateReport);
+            document.getElementById('cancelReportBtn').addEventListener('click', closeReportModal);
+            document.getElementById('closeModal').addEventListener('click', closeReportModal);
+            document.getElementById('downloadReportBtn').addEventListener('click', downloadReport);
+        }
+
+        // ==================== File Handling ====================
+        function handleFiles(files) {
+            if (files.length === 0) return;
+
+            const file = files[0];
+
+            // Check file type
+            if (!file.type.startsWith('image/')) {
+                showStatus(t('fileTypeError'), 'error');
+                return;
+            }
+
+            // Check file size
+            if (file.size > 50 * 1024 * 1024) {
+                showStatus(t('fileSizeError'), 'error');
+                return;
+            }
+
+            // Show preview
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const preview = document.getElementById('imagePreview');
+                const previewImage = document.getElementById('previewImage');
+                previewImage.src = e.target.result;
+                preview.style.display = 'block';
+
+                document.getElementById('analyzeBtn').disabled = false;
+                document.getElementById('clearBtn').style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+
+            // Save file reference
+            fileInput.files = files;
+        }
+
+        function clearUpload() {
+            document.getElementById('fileInput').value = '';
+            document.getElementById('imagePreview').style.display = 'none';
+            document.getElementById('analyzeBtn').disabled = true;
+            document.getElementById('clearBtn').style.display = 'none';
+            document.getElementById('resultsContainer').style.display = 'none';
+            currentPrediction = null;
+            currentImagePath = null;
+        }
+
+        // ==================== Analysis ====================
+        async function analyzeImage() {
+            const fileInput = document.getElementById('fileInput');
+            if (fileInput.files.length === 0) {
+                showStatus(t('uploadFirstError'), 'error');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+
+            showLoading(true);
+            showStatus(t('analyzingStatus'), 'info');
+
+            try {
+                const response = await fetch('/api/predict', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || t('analysisFailed'));
+                }
+
+                currentPrediction = data.prediction;
+                currentImagePath = data.image_path;
+
+                displayResults(data);
+                showStatus(t('analysisComplete'), 'success');
+            } catch (error) {
+                showStatus(t('analysisFailed') + ' ' + error.message, 'error');
+                console.error('Error:', error);
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        function displayResults(data) {
+            const prediction = data.prediction;
+
+            // Update diagnosis box
+            const diagnosisBox = document.getElementById('diagnosisBox');
+            const isTumor = prediction.tumor_probability > 0.5;
+            diagnosisBox.className = 'diagnosis-box ' + (isTumor ? 'warning' : 'success');
+
+            document.getElementById('diagnosisTitle').textContent = prediction.class;
+            document.getElementById('diagnosisSubtitle').textContent =
+                `${t('confidence')} ${(prediction.confidence * 100).toFixed(2)}%`;
+
+            // Update results
+            document.getElementById('mainDiagnosis').textContent = prediction.class;
+            document.getElementById('confidence').textContent =
+                `${(prediction.confidence * 100).toFixed(2)}%`;
+            document.getElementById('tumorProbability').textContent =
+                `${(prediction.tumor_probability * 100).toFixed(2)}%`;
+
+            // Update probability distribution
+            const probabilityItems = document.getElementById('probabilityItems');
+            probabilityItems.innerHTML = '';
+
+            const sortedProbs = Object.entries(prediction.probabilities)
+                .sort((a, b) => b[1] - a[1]);
+
+            for (const [className, prob] of sortedProbs) {
+                const item = document.createElement('div');
+                item.className = 'probability-item';
+                item.innerHTML = `
+                    <div class="probability-label">${className}</div>
+                    <div class="probability-bar">
+                        <div class="probability-fill" style="width: ${prob * 100}%">
+                            ${(prob * 100).toFixed(1)}%
+                        </div>
+                    </div>
+                    <div class="probability-value">${(prob * 100).toFixed(2)}%</div>
+                `;
+                probabilityItems.appendChild(item);
+            }
+
+            document.getElementById('resultsContainer').style.display = 'block';
+        }
+
+        // ==================== Report Generation ====================
+        function showReportModal() {
+            document.getElementById('reportModal').classList.add('show');
+        }
+
+        function closeReportModal() {
+            document.getElementById('reportModal').classList.remove('show');
+        }
+
+        function setExamDate() {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('examDate').value = today;
+        }
+
+        async function generateReport() {
+            if (!currentPrediction) {
+                showStatus(t('analyzeFirstError'), 'error');
+                return;
+            }
+
+            const reportLanguage = document.getElementById('reportLanguage').value || 'en';
+            const locationPlaceholder = reportLanguage === 'zh' ? '位置不确定' : 'Location uncertain';
+
+            const patientInfo = {
+                patient_id: document.getElementById('patientId').value || 'N/A',
+                exam_date: document.getElementById('examDate').value,
+                tumor_location: document.getElementById('tumorLocation').value || locationPlaceholder,
+                remarks: document.getElementById('remarks').value || '',
+                image_quality: 'Good',
+                processing_time: '1250',
+                report_language: reportLanguage
+            };
+
+            showLoading(true);
+            showStatus(t('generatingReportStatus'), 'info');
+
+            try {
+                const response = await fetch('/api/generate-report', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        prediction: currentPrediction,
+                        image_path: currentImagePath,
+                        patient_info: patientInfo,
+                        report_language: reportLanguage
+                    })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || t('reportGeneratedFailed'));
+                }
+
+                currentReportId = data.report_id;
+                closeReportModal();
+                showStatus(t('reportGeneratedSuccess'), 'success');
+                document.getElementById('downloadReportBtn').style.display = 'block';
+
+                // Show report preview
+                alert(t('reportPreviewAlert') + data.text_report.substring(0, 500) + '\n\n...');
+            } catch (error) {
+                showStatus(t('reportGeneratedFailed') + ' ' + error.message, 'error');
+                console.error('Error:', error);
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        function downloadReport() {
+            if (!currentReportId) {
+                showStatus(t('downloadFirstError'), 'error');
+                return;
+            }
+
+            // Download HTML report
+            window.location.href = `/api/download-report/${currentReportId}/html`;
+        }
+
+        // ==================== UI Helpers ====================
+        function showLoading(show) {
+            document.getElementById('loading').classList.toggle('show', show);
+        }
+
+        function showStatus(message, type) {
+            const statusMessage = document.getElementById('statusMessage');
+            statusMessage.textContent = message;
+            statusMessage.className = `status-message show ${type}`;
+
+            if (type !== 'error') {
+                setTimeout(() => {
+                    statusMessage.classList.remove('show');
+                }, 5000);
+            }
+        }
+    </script>
+</body>
+</html>
